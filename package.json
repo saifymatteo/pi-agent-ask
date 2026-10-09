@@ -1,16 +1,18 @@
 {
-  "name": "pi-agent-ask",
-  "version": "1.2.8",
-  "description": "Let your Pi agent ask instead of guessing, keep working, and remember your answers.",
+  "name": "@saifymatteo/pi-agent-ask",
+  "version": "1.0.0",
+  "description": "Let your Pi agent ask instead of guessing, and keep working while you answer."
   "license": "MIT",
+  "author": "saifymatteo",
+  "packageManager": "pnpm@12.10.1",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alexshpunt/pi-agent-ask.git"
+    "url": "git+https://github.com/saifymatteo/pi-agent-ask.git"
   },
-  "homepage": "https://github.com/alexshpunt/pi-agent-ask#readme",
+  "homepage": "https://github.com/saifymatteo/pi-agent-ask#readme",
   "bugs": {
-    "url": "https://github.com/alexshpunt/pi-agent-ask/issues"
+    "url": "https://github.com/saifymatteo/pi-agent-ask/issues"
   },
   "keywords": [
     "pi-package",
@@ -30,7 +32,6 @@
     "background-questions",
     "questionnaire",
     "session-history",
-    "markdown-export",
     "terminal-ui",
     "typescript"
   ],
@@ -62,7 +63,7 @@
     "extensions": [
       "./src/index.ts"
     ],
-    "image": "https://raw.githubusercontent.com/alexshpunt/pi-agent-ask/main/assets/ask-gallery.webp"
+    "image": "https://raw.githubusercontent.com/saifymatteo/pi-agent-ask/main/assets/ask-gallery.webp"
   },
   "publishConfig": {
     "access": "public",
@@ -95,19 +96,5 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "node-pty"
-    ],
-    "overrides": {
-      "@earendil-works/pi-agent-core": "1.0.0",
-      "@earendil-works/pi-ai": "1.0.0",
-      "@earendil-works/pi-tui": "1.0.0",
-      "@earendil-works/pi-coding-agent": "1.0.0"
-    },
-    "ignoredBuiltDependencies": [
-      "lefthook"
-    ]
   }
 }

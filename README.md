@@ -36,6 +36,7 @@ Questions can be `single`, `multi`, or `preview`. The extension opens only in TU
 - automatic recovery of an interrupted form across startup, resume, and fork
 - best-effort notification when a question is waiting
 - optional `herdr:blocked` status while a form waits (for [Herdr](https://github.com/maudelv/pi-ask/tree/feat/herdr-blocked-state))
+- `/ask-settings` and an in-form settings overlay
 - paste screenshots into answers and notes when the form's image-paste shortcut is available
 
 ## Paste a screenshot into your answer
