@@ -42,7 +42,7 @@ pnpm check
 
 ## Commit messages
 
-This repo uses conventional commits and semantic-release.
+This repo uses conventional commit messages.
 
 Recommended flow:
 
@@ -56,7 +56,7 @@ Examples:
 - `fix: preserve option notes when toggling selection`
 - `docs: clarify npm install flow`
 
-Conventional commit types matter because releases are generated automatically from commit history.
+Conventional commit types keep history readable and make release notes easy to assemble.
 
 ## Scope of changes
 
