@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   release:
-    if: github.repository == 'alexshpunt/pi-agent-ask'
+    if: github.repository == 'saifymatteo/pi-agent-ask'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -32,8 +32,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.32.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -49,7 +47,7 @@ jobs:
           node --input-type=module -e '
             import fs from "node:fs";
             const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
-            if (pkg.name !== "pi-agent-ask" || process.env.RELEASE_TAG !== "v" + pkg.version) {
+            if (pkg.name !== "@saifymatteo/pi-agent-ask" || process.env.RELEASE_TAG !== "v" + pkg.version) {
               throw new Error("Package identity or tag does not match the release");
             }
           '

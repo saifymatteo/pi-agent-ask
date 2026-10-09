@@ -1,58 +1,55 @@
-<p align="center">
-  <img src="assets/ask.webp" alt="A puzzled robot holding coffee and wondering what you meant" width="320">
-</p>
+# Pi Agent Ask
 
-<h1 align="center">Pi Agent Ask</h1>
+A [Pi](https://pi.dev/) extension that lets your agent ask you a structured question and keep working while you answer.
 
-<p align="center"><strong>Give your agent permission to ask “What the fuck?”</strong></p>
-
-<p align="center">
-  <a href="https://www.npmjs.com/package/pi-agent-ask"><img src="https://img.shields.io/npm/dm/pi-agent-ask?label=npm%20downloads" alt="npm downloads"></a>
-  <a href="https://github.com/alexshpunt/pi-agent-ask/actions/workflows/ci.yml"><img src="https://github.com/alexshpunt/pi-agent-ask/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <a href="https://github.com/alexshpunt/pi-agent-ask/discussions"><img src="https://img.shields.io/badge/GitHub-Discussions-purple" alt="Discussions"></a>
-</p>
-
-You gave your agent an obscure task. It didn't understand a damn thing.
-
-Instead of blindly following your bullshit, it asks a question.
-
-**And it keeps working while you answer.**
+`ask_user` opens an interactive form — single-select, multi-select, preview panes, free-form answers, and per-question or per-option notes. With `background: true`, the agent continues independent work and your answer arrives between turns (or wakes an idle agent); `wait_for_answers` blocks only when the agent genuinely needs the answer.
 
 ## Install
 
 Install [Pi](https://pi.dev/), then:
 
 ```bash
-pi install npm:pi-agent-ask
+pi install npm:@saifymatteo/pi-agent-ask
 ```
 
 Or install directly from GitHub:
 
 ```bash
-pi install git:github.com/alexshpunt/pi-agent-ask
+pi install git:github.com/saifymatteo/pi-agent-ask
 ```
 
-Remove any other pi-ask installation so only one extension provides `ask_user`, then reload Pi.
+Remove any other `pi-ask` installation so only one extension provides `ask_user`, then reload Pi.
 
-## Ask. Keep working. Get the answer.
+## Tools
 
-The agent calls `ask_user`. You get a form with choices, previews, your own answer, and notes. Not another wall of text to untangle.
+- `ask_user` — the interactive question form. Foreground by default; `background: true` queues it and returns a receipt.
+- `wait_for_answers` — blocks until all outstanding background forms are answered, without a built-in timeout.
 
-With `background: true`, the agent continues independent work. Your answer arrives between turns, or wakes an idle agent. If there's nothing else it can do, it calls `wait_for_answers`.
+Questions can be `single`, `multi`, or `preview`. The extension opens only in TUI mode; outside TUI, `ask_user` returns a cancelled result containing the normalized pending questions.
 
-It still has to wait before doing work that depends on your answer. “Keep working” doesn't mean “guess anyway.”
+## Features
 
-## Recovery
+- tabbed multi-question flow with single/multi/preview types
+- inline free-form answers and `@` file-path autocomplete
+- question notes, option notes, and an elaborate/continue path
+- background question queue, opened one form at a time in FIFO order
+- automatic recovery of an interrupted form across startup, resume, and fork
+- best-effort notification when a question is waiting
+- optional `herdr:blocked` status while a form waits (for [Herdr](https://github.com/maudelv/pi-ask/tree/feat/herdr-blocked-state))
+- `/ask-settings` and an in-form settings overlay
 
-The question journal survives **compaction, reload, and resume**, and follows the current session branch. Unfinished forms can recover too. It backs form recovery and background delivery; there are no agent-facing history tools.
+## Trimmed fork
 
-## The boring bits
+This is a trimmed fork. It keeps the interactive form UI, the background queue, `wait_for_answers`, journal-based form recovery, and Herdr status. It removes the agent-facing history tools, the bundled skill, the config system-prompt line, and external UI negotiation. The agent-facing surface is two tools with a short description and four prompt guidelines.
 
-Use `/ask-settings`, or press `?` in a form. See [configuration](docs/configuration.md), [tool behavior](docs/contract.md), and [integration events](docs/remote-events.md).
+- [configuration](docs/configuration.md)
+- [tool contract](docs/contract.md)
+- [integration events](docs/remote-events.md)
 
-This fork of [eko24ive/pi-ask](https://github.com/eko24ive/pi-ask) adds background questions, waiting, durable form recovery, and Herdr status. It drops chat question extraction, manual answer/replay commands, agent-facing history tools, external UI support, and the bundled skill. The agent asks directly; the form needs no extra model call.
+## Credits
 
-Herdr support includes [maudelv's work](https://github.com/maudelv/pi-ask/tree/feat/herdr-blocked-state).
+Forked from [alexshpunt/pi-agent-ask](https://github.com/alexshpunt/pi-agent-ask), which builds on [eko24ive/pi-ask](https://github.com/eko24ive/pi-ask). Herdr blocked-state support comes from [maudelv's fork](https://github.com/maudelv/pi-ask/tree/feat/herdr-blocked-state). The original project README lives at the upstream repository linked above.
 
-Found a weird case? [Open an issue](https://github.com/alexshpunt/pi-agent-ask/issues). Got an idea? [Start a discussion](https://github.com/alexshpunt/pi-agent-ask/discussions). [Contributions](CONTRIBUTING.md) welcome. [MIT](LICENSE).
+## License
+
+[MIT](LICENSE)
