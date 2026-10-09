@@ -1,7 +1,11 @@
 {
   "name": "@saifymatteo/pi-agent-ask",
   "version": "1.0.0",
-  "description": "Let your Pi agent ask instead of guessing, and keep working while you answer."
+<<<<<<< HEAD
+  "description": "Let your Pi agent ask instead of guessing, and keep working while you answer.",
+=======
+  "description": "Let your Pi agent ask instead of guessing, and keep working while you answer.",
+>>>>>>> d702296 (chore: prepare standalone release metadata)
   "license": "MIT",
   "author": "saifymatteo",
   "packageManager": "pnpm@12.10.1",
