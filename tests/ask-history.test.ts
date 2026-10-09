@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
 import { SessionManager } from "@earendil-works/pi-coding-agent";
@@ -9,13 +9,11 @@ import {
 	readAskHistory,
 	selectAskHistory,
 } from "../src/ask-history.ts";
-import { exportAskHistory } from "../src/ask-history-export.ts";
 import { createInitialState } from "../src/state/create.ts";
 import type { AskResult } from "../src/types.ts";
 
 const MISSING_KEY_RE = /not found/;
 const EMPTY_SELECTION_RE = /at least one/;
-const EXISTING_FILE_RE = /exist/i;
 const state = createInitialState({
 	title: "Choose scope",
 	questions: [
@@ -219,70 +217,6 @@ test("session file is sufficient after reopening without an in-memory index", as
 			readAskHistory(reopened.getBranch()),
 			readAskHistory(manager.getBranch())
 		);
-	} finally {
-		await rm(directory, { recursive: true, force: true });
-	}
-});
-
-test("selected Markdown export keeps exact text, fails closed and never overwrites", async () => {
-	await mkdir(".tmp", { recursive: true });
-	const directory = await mkdtemp(join(process.cwd(), ".tmp/history-export-"));
-	try {
-		const { manager, pi } = journal();
-		const first = appendAskHistoryRequest(pi, "first", state, false);
-		appendAskHistoryCompletion(pi, { requestId: first, result: answer });
-		appendAskHistoryRequest(
-			pi,
-			"second",
-			{
-				...state,
-				questions: [{ ...state.questions[0], prompt: "Do not export this" }],
-			},
-			false
-		);
-		const records = readAskHistory(manager.getBranch());
-		const selected = selectAskHistory(records, [
-			{ requestId: first, questionId: "scope" },
-		]);
-		const path = join(directory, "selected.md");
-		const result = await exportAskHistory(path, directory, selected);
-		assert.equal(result.path, path);
-		const content = await readFile(path, "utf8");
-		for (const text of [
-			first,
-			"Which **scope**?",
-			"Keep it small",
-			"Original preview\nSecond line",
-			"Custom text",
-			"Keep this note",
-			"Option note",
-			"answered",
-		]) {
-			assert(content.includes(text), text);
-		}
-		assert(!content.includes("Do not export this"));
-		assert.throws(
-			() =>
-				selectAskHistory(records, [
-					{ requestId: first, questionId: "scope" },
-					{ requestId: "missing", questionId: "scope" },
-				]),
-			MISSING_KEY_RE
-		);
-		await writeFile(path, "Keep existing data");
-		await assert.rejects(
-			exportAskHistory(path, directory, selected),
-			EXISTING_FILE_RE
-		);
-		assert.equal(await readFile(path, "utf8"), "Keep existing data");
-		await assert.rejects(
-			exportAskHistory(
-				join(directory, "absent", "export.md"),
-				directory,
-				selected
-			)
-		);
-		assert.equal(readAskHistory(manager.getBranch()).length, 2);
 	} finally {
 		await rm(directory, { recursive: true, force: true });
 	}

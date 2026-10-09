@@ -21,7 +21,6 @@ import {
 import type { BackgroundAskRuntime } from "./background-ask.ts";
 import { AskQueuedSchema } from "./background-ask-state.ts";
 import { getAskConfigStore } from "./config/store.ts";
-import { connectExternalAskUi, runExternalAskFlow } from "./external-ui.ts";
 import { resolvePreviewFiles } from "./preview-files.ts";
 import type { RemoteAskRuntime } from "./remote-ask.ts";
 import { AskResultSchema } from "./result-schema.ts";
@@ -61,34 +60,6 @@ export function registerAskTool(
 	});
 }
 
-async function executeNonTuiAsk(
-	pi: Pick<ExtensionAPI, "events">,
-	ctx: ExtensionContext,
-	params: AskParams,
-	state: AskState,
-	toolCallId: string,
-	signal: AbortSignal | undefined,
-	runtime?: RemoteAskRuntime
-) {
-	const provider =
-		!params.background && runtime
-			? connectExternalAskUi(pi.events, ctx.mode, toolCallId)
-			: undefined;
-	if (!(provider && runtime)) {
-		return nonInteractiveResponse(state);
-	}
-	const result = await runExternalAskFlow({
-		provider,
-		runtime,
-		state,
-		toolCallId,
-		signal,
-	});
-	if (result.cancelled) {
-		ctx.abort();
-	}
-	return successfulResponse(result);
-}
 async function executeAskTool(
 	pi: Pick<ExtensionAPI, "appendEntry" | "events">,
 	toolCallId: string,
@@ -155,16 +126,7 @@ async function executeRecordedAsk(
 	backgroundAsk?: BackgroundAskRuntime
 ) {
 	if (ctx.mode !== "tui") {
-		const response = await executeNonTuiAsk(
-			pi,
-			ctx,
-			params,
-			state,
-			toolCallId,
-			signal,
-			remoteAsk
-		);
-		return recordResponse(pi, requestId, response);
+		return recordResponse(pi, requestId, nonInteractiveResponse(state));
 	}
 	if (params.background) {
 		if (!backgroundAsk) {

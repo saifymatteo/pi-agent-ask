@@ -6,9 +6,8 @@ This folder keeps only the documentation needed to understand and maintain the e
 
 - `configuration.md` — configuration guide for pi-agent-ask keymaps, behaviour, and notifications
 - `contract.md` — external behavior, tool payload/result details, and UX guarantees
-- `remote-events.md` — local inter-extension event contract, bridge examples, and smoke-test steps
+- `remote-events.md` — local inter-extension lifecycle and submit event contract
 - `architecture.md` — module boundaries and invariants
-- `../skills/ask-user/SKILL.md` — auto-bundled agent-side decision-gate guidance; enabled by default, but can be disabled via `pi config`; inspired by https://github.com/edlsh/pi-ask-user
 
 ## Reading order
 
@@ -26,7 +25,7 @@ pnpm dev
 pnpm dev ../some-target-folder
 ```
 
-This starts pi in isolated mode, loads only this extension and bundled `ask-user` skill, and uses the optional folder as `--cd` target.
+This starts pi in isolated mode, loads only this extension, and uses the optional folder as `--cd` target.
 
 ## Rule of thumb
 

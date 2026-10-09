@@ -54,13 +54,17 @@ test("real Pi exposes agent question tools without answer or replay commands", {
 			`${removed} must not be registered`
 		);
 	}
-	for (const tool of [
-		"ask_user",
-		"wait_for_answers",
+	for (const tool of ["ask_user", "wait_for_answers"]) {
+		assert(details.tools.includes(tool), tool);
+	}
+	for (const removed of [
 		"list_ask_history",
 		"read_ask_history",
 		"export_ask_history",
 	]) {
-		assert(details.tools.includes(tool), tool);
+		assert(
+			!details.tools.includes(removed),
+			`${removed} must not be registered`
+		);
 	}
 });

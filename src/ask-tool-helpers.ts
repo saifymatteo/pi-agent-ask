@@ -18,25 +18,13 @@ import type {
 } from "./types.ts";
 
 export const ASK_TOOL_DESCRIPTION =
-	"Interactive clarification tool for cases where the next step depends on user preferences, missing requirements, or choosing between multiple valid directions. Ask a short structured interview, collect normalized answers, and continue using those answers explicitly instead of guessing. Supports single-select, multi-select, and preview-pane questions. Always include a stable `id` and non-empty `prompt` for every question, plus a machine-readable `value` and visible `label` for every option. Use `preview` only when every option includes `preview` text or a local UTF-8 `previewFile` path; descriptions alone are not enough.";
+	"Ask the user a short structured interview when the next step depends on their preference, missing requirements, or a choice between valid directions. Returns the answers as structured data to continue with, instead of guessing.";
 
 export const ASK_TOOL_PROMPT_GUIDELINES = [
-	"Set background: true on ask_user when you can continue independent work while the user answers. It returns a queued receipt with requestId, not an answer or approval.",
-	"Background forms open automatically in FIFO order. Each completed form arrives as a correlated background-answer message at the next turn boundary; when idle, the answer wakes the agent.",
-	"After asking in background, keep researching only work that does not depend on the pending answers. Never guess answers or cross a dependent decision, approval, or irreversible-action gate.",
-	"Call wait_for_answers when independent work is exhausted or before taking a step that needs pending answers. It waits for all outstanding forms without a built-in timeout. Aborting the wait leaves the forms queued.",
-	"wait_for_answers returns results not already delivered asynchronously. An empty results list does not mean the user approved anything; use answers already in context. Cancellation and elaboration are not approval.",
-	"Use `ask_user` before making preference-sensitive decisions about scope, tone, UX, naming, architecture, docs, or implementation direction.",
-	"When multiple valid directions exist, call `ask_user` with 1-3 concise questions instead of committing to one path on your own.",
-	"When calling `ask_user`, prefer one focused decision per question. Use short labels. Provide clear, distinct options. Do not add filler options.",
-	"When calling `ask_user`, always include a stable `id` and non-empty `prompt` for every question.",
-	"When calling `ask_user`, always include a non-empty machine-readable `value` and visible `label` for every option.",
-	"When calling `ask_user`, mark grounded preferences with `recommended: true` and use the option `description` to state the reason.",
-	"When calling `ask_user`, choose question `type` from the question semantics: `single` means one answer is expected, `multi` means multiple answers could reasonably be selected, and `preview` means options need preview-pane detail.",
-	'When calling `ask_user`, use `type: "preview"` only when every option includes non-empty `preview` text or a local UTF-8 `previewFile` path. Option descriptions do not satisfy this requirement.',
-	"After an `ask_user` elaboration or follow-up note, prefer another structured `ask_user` follow-up if a choice is still needed instead of switching to plain-text multiple choice in chat.",
-	"When prior `ask_user` answers narrow the branch, bundle the next 2-3 related unresolved decisions into one follow-up `ask_user` call when possible.",
-	"Use one-at-a-time `ask_user` follow-up calls only when the next question materially depends on the previous answer.",
+	"Call `ask_user` before a consequential or ambiguous decision — scope, architecture, naming, UX, tone, requirements, or any choice the user would want to own — and let the user pick the path.",
+	"Set `background: true` when you can keep working while the user answers; its receipt is not an answer. Never guess answers for pending forms or cross a dependent, approval, or irreversible step; call `wait_for_answers` when independent work is exhausted.",
+	"Ask one focused decision per question with short, distinct option labels; mark grounded preferences with `recommended: true` and explain the reason in the option `description`.",
+	"Choose `type` from the semantics: `single` for one answer, `multi` when several can apply, and `preview` only when every option has non-empty `preview` text or a local UTF-8 `previewFile` path.",
 ] as const;
 
 interface ValidateParamsOptions {
