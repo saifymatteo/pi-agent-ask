@@ -244,7 +244,7 @@ Queue state is rebuilt from the active branch on startup, reload, resume, fork, 
 
 Recovered forms wait for the native editor and open in its usual slot. If later lifecycle cleanup replaces that slot again, the same form mounts again without losing answers, notes, or editor drafts. This does not create a new remote flow, repeat notifications, use a timer, or reopen completed forms. Other input dialogs keep their slot until they close.
 
-Open background forms emit `herdr:blocked` while the agent keeps working, with cleanup when the form closes. Aborting an explicit wait does not clear an open form's blocked status. Tool prompt guidelines and the bundled skill explain this workflow and forbid dependent work before answers.
+Open background forms emit `herdr:blocked` while the agent keeps working, with cleanup when the form closes. Aborting an explicit wait does not clear an open form's blocked status. Tool prompt guidelines explain this workflow and warn against crossing a dependent step before answers.
 
 ## Session question history
 
@@ -252,19 +252,11 @@ Every valid `ask_user` tool call gets an extension-generated UUID `requestId`. F
 
 Normalized questions and loaded previews are saved before waiting for input. Outcomes are saved before answer delivery, even for nested calls that do not have a separate tool-result entry. The journal is stored only in the session file, outside normal model context. It survives compaction, reload, and resume without relying on summaries. Reads follow `getBranch()` including its ancestors; sibling branches and other sessions are not available.
 
-Three agent-callable tools have empty native TUI call/result rows, including errors and resumed history. This does not hide data from the session file or prevent the agent from quoting it.
+The journal is internal. It backs interrupted-form recovery and background delivery; there are no agent-facing history tools.
 
-### Tools
+Statuses are `waiting`, `answered`, `skipped`, `cancelled`, `clarification`, and `error`. Notes without a committed answer remain available but are not answers. A cancellation, waiting result, or clarification is not approval.
 
-- `list_ask_history({ query?, answeredOnly?, offset?, limit? })` returns `{ total, offset, nextOffset?, records }`. Search is case-insensitive across recorded data. The default limit is 50, maximum 200. Each summary includes both keys, prompt, label, title when set, creation time, background flag, status, mode when complete, and `hasAnswer`. Follow `nextOffset` until absent to reach the full filtered list.
-- `read_ask_history({ requestId, questionId })` returns `{ record }`: the full normalized question and options, saved previews, answer values/labels/positions, custom text, notes, question-specific elaboration, and outcome. Missing or out-of-branch keys are tool errors.
-- `export_ask_history({ path, keys? })` returns `{ path, keys }`. Omit `keys` for the full current-branch journal; otherwise supply a non-empty array of question keys. Duplicate selections are deduplicated, and records keep journal order. All keys are validated before any file is created. A missing or out-of-branch key fails the whole selection.
-
-Statuses are `waiting`, `answered`, `skipped`, `cancelled`, `clarification`, and `error`. Notes without a committed answer remain available but are not answers. `answeredOnly` and `hasAnswer` identify committed answers; clarification may still be pending. A cancellation, waiting result, or clarification is not approval.
-
-Export writes a new UTF-8 Markdown file relative to Pi's working directory or to an absolute path. The parent directory must exist. It never replaces an existing file or follows a destination symlink. Text fields use literal fenced blocks so Markdown punctuation and line breaks stay intact; no model rewriting is involved. Exported records include identity, request context, options, answers, notes, and status. Write failures are tool errors, not successful exports.
-
-Ordinary and background tool calls, including a connected external UI's foreground result, are captured. Recovering an interrupted tool request completes its original journal key when present. Ordinary chat does not create journal requests. Existing sessions without journal entries are not reconstructed. The journal does not automatically reuse answers, create tasks, or write files except through explicit export calls.
+Ordinary and background tool calls are captured. Recovering an interrupted tool request completes its original journal key when present. Ordinary chat does not create journal requests. Existing sessions without journal entries are not reconstructed. The journal does not automatically reuse answers or create tasks.
 
 ## Product identity
 
@@ -334,13 +326,7 @@ Dirty dismiss:
 
 ## Non-TUI and non-interactive modes
 
-The rich ask flow uses `ctx.ui.custom()` and opens only in TUI mode. A non-TUI foreground `ask_user` can instead wait for an explicitly connected external UI supplied by a trusted extension in the same Pi process. The bridge must check that its UI is connected and supported before offering it; environment variables alone are not a connection.
-
-Without a supported connection, print, JSON, RPC, and other non-TUI calls keep the `Needs user input: ask_user requires interactive TUI mode.` message and cancelled result. Non-TUI background calls always keep that fallback and never open the external UI.
-
-Connected foreground calls stay pending until an explicit answer or cancel. pi-agent-ask loads file previews, applies `presentSingleAsMulti`, validates question ids and values, and builds the normal result with locally computed labels and indices. Cancel stops the current agent operation, as in TUI. Operation abort closes the external form; late responses cannot change the result. UI disconnection, rejection, or a malformed returned response is a tool error, not an invented answer or user cancellation. All terminal paths remove the active flow and abort the provider's signal.
-
-The native TUI remains the default and never negotiates an external surface. This contract does not transport TUI components, settings, or background queues. The external UI owns its layout and transport; pixel parity and universal extension support are not promised. See [external UI negotiation](remote-events.md#external-ui-negotiation) for the adapter API.
+The rich ask flow uses `ctx.ui.custom()` and opens only in TUI mode. Print, JSON, RPC, and other non-TUI calls return a cancelled result with the `Needs user input: ask_user requires interactive TUI mode.` message and the normalized pending questions. Non-TUI background calls take the same fallback and are never queued. There is no external UI surface: the native TUI is the only ask surface.
 
 The public tool schema requires question `id` and `prompt` plus option `value` and `label`, and it restricts question `type` to `single`, `multi`, or `preview`, so malformed structural fields fail before execution. The tool still validates trimmed text, uniqueness, option counts, and preview requirements during execution and returns structured issues for those failures. Result rendering falls back to Pi's raw tool-error text when schema validation prevents execution.
 
@@ -389,12 +375,6 @@ See [`remote-events.md`](remote-events.md) for payload shapes, examples, and a l
 - recovered flows emit remote lifecycle events with source `ask:resume`
 
 The fallback message includes normalized pending questions and options so the caller can re-ask them manually. `details.questions` still contains normalized question metadata, while `details.answers` stays empty until a user responds.
-
-## Skill alignment (advisory)
-
-The auto-bundled skill profile at `skills/ask-user/SKILL.md` defines agent-side decision-gate guidance for when to call `ask_user`. It is enabled by default when the package is installed, but can be disabled via `pi config`.
-
-It is advisory only. If there is any conflict, contract + tests win.
 
 ## Source of truth
 

@@ -43,24 +43,16 @@ With `background: true`, the agent continues independent work. Your answer arriv
 
 It still has to wait before doing work that depends on your answer. “Keep working” doesn't mean “guess anyway.”
 
-The bundled [skill](skills/ask-user/SKILL.md) guides the agent to ask when a decision matters. It doesn't force every agent to behave.
+## Recovery
 
-## Your answers aren't disposable
-
-The agent can look up earlier questions and answers, then export them as a Markdown artifact for your task:
-
-- `list_ask_history` finds past questions.
-- `read_ask_history` reads the question, choices, answer, and notes.
-- `export_ask_history` exports all or selected records.
-
-The journal survives **compaction, reload, and resume**. It follows the current session branch, not every conversation you've ever had. Unfinished forms can recover too.
+The question journal survives **compaction, reload, and resume**, and follows the current session branch. Unfinished forms can recover too. It backs form recovery and background delivery; there are no agent-facing history tools.
 
 ## The boring bits
 
 Use `/ask-settings`, or press `?` in a form. See [configuration](docs/configuration.md), [tool behavior](docs/contract.md), and [integration events](docs/remote-events.md).
 
-This fork of [eko24ive/pi-ask](https://github.com/eko24ive/pi-ask) adds background questions, waiting, durable history/export, external UI support, and Herdr status. It drops chat question extraction and manual answer/replay commands. The agent asks directly; the form needs no extra model call.
+This fork of [eko24ive/pi-ask](https://github.com/eko24ive/pi-ask) adds background questions, waiting, durable form recovery, and Herdr status. It drops chat question extraction, manual answer/replay commands, agent-facing history tools, external UI support, and the bundled skill. The agent asks directly; the form needs no extra model call.
 
-Herdr support includes [maudelv's work](https://github.com/maudelv/pi-ask/tree/feat/herdr-blocked-state); the skill was inspired by [edlsh/pi-ask-user](https://github.com/edlsh/pi-ask-user).
+Herdr support includes [maudelv's work](https://github.com/maudelv/pi-ask/tree/feat/herdr-blocked-state).
 
 Found a weird case? [Open an issue](https://github.com/alexshpunt/pi-agent-ask/issues). Got an idea? [Start a discussion](https://github.com/alexshpunt/pi-agent-ask/discussions). [Contributions](CONTRIBUTING.md) welcome. [MIT](LICENSE).
