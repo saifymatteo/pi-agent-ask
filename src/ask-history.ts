@@ -55,7 +55,6 @@ export function appendAskHistoryCompletion(
 	);
 }
 
-
 /** Recover the original journal identity when an interrupted tool request is reopened. */
 export function findPendingHistoryRequest(
 	branch: readonly SessionEntry[],

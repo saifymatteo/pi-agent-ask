@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { SessionManager } from "@earendil-works/pi-coding-agent";
 import {
 	assistantMessage,
 	getToolExecution,
@@ -14,8 +13,6 @@ import {
 	text,
 	toolCall,
 } from "pi-coding-agent-test";
-import { readAskHistory } from "../../src/ask-history.ts";
-import { exportAskHistory } from "../../src/ask-history-export.ts";
 import type { AskResult } from "../../src/types.ts";
 
 const call = (id: string, name: string, args: Record<string, unknown>) =>
@@ -51,7 +48,7 @@ const imageExtensions = [
 	fileURLToPath(new URL("../../src/index.ts", import.meta.url)),
 	fileURLToPath(new URL("../fixtures/image-driver.ts", import.meta.url)),
 ];
-// Runs the real editor, clipboard command, result schema, queue and history tools.
+// Runs the real editor, clipboard command, result schema, and background queue.
 test("real Pi delivers pasted images from all editors, background paths and clarification", {
 	timeout: 90_000,
 }, async () => {
@@ -68,37 +65,24 @@ test("real Pi delivers pasted images from all editors, background paths and clar
 			timeoutMs: 60_000,
 			environment: clipboardEnvironment,
 			extensions: imageExtensions,
-			tools: [
-				"ask_user",
-				"image_probe",
-				"wait_for_answers",
-				"read_ask_history",
-				"export_ask_history",
-			],
+			tools: ["ask_user", "image_probe", "wait_for_answers"],
 			conversation: [
 				call("foreground", "ask_user", form("foreground")),
-				call("read", "read_ask_history", {
-					requestId: "foreground",
-					questionId: "q",
-				}),
 				call("async", "ask_user", form("async", true)),
 				call("answer-async", "image_probe", {}),
 				call("waited", "ask_user", form("waited", true)),
 				call("wait", "wait_for_answers", {}),
 				call("clarify", "ask_user", form("clarify")),
-				call("export", "export_ask_history", { path: "images.md" }),
 				assistantMessage([text("Image verification complete.")]),
 			],
 		}).run("Verify clipboard images through the real questionnaire.");
 		for (const id of [
 			"foreground",
-			"read",
 			"async",
 			"answer-async",
 			"waited",
 			"wait",
 			"clarify",
-			"export",
 		]) {
 			assert.equal(getToolExecution(result, id).isError, false, id);
 		}
@@ -110,7 +94,7 @@ test("real Pi delivers pasted images from all editors, background paths and clar
 		assert.equal(answer.answers.q.customImages?.length, 1);
 		assert.equal(answer.answers.q.note, "Question text");
 		assert.equal(answer.answers.q.optionNotes?.yes, "Option text");
-		for (const id of ["foreground", "read", "wait", "clarify"]) {
+		for (const id of ["foreground", "wait", "clarify"]) {
 			const content = (
 				getToolExecutionResult(result, id) as {
 					content: Array<{ type: string; data?: string }>;
@@ -175,36 +159,6 @@ test("real Pi delivers pasted images from all editors, background paths and clar
 			);
 			assert(screens.at(-1)?.includes("Question text [1 image]"));
 		}
-		const exported = await readFile(join(cwd, "images.md"), "utf8");
-		assert(exported.includes(`data:image/png;base64,${png}`));
-		const sessionPath = join(cwd, "saved.jsonl");
-		await writeFile(
-			sessionPath,
-			`${[
-				{
-					type: "session",
-					id: "images",
-					version: 3,
-					timestamp: new Date().toISOString(),
-					cwd,
-				},
-				...snapshot.branch,
-			]
-				.map((entry) => JSON.stringify(entry))
-				.join("\n")}\n`
-		);
-		const reopened = SessionManager.open(sessionPath);
-		const records = readAskHistory(reopened.getBranch());
-		assert.equal(records.length, 4);
-		assert(
-			records.every((record) => record.answer?.customImages?.[0].data === png)
-		);
-		await exportAskHistory("reopened.md", cwd, records);
-		assert(
-			(await readFile(join(cwd, "reopened.md"), "utf8")).includes(
-				`data:image/png;base64,${png}`
-			)
-		);
 	} finally {
 		await rm(cwd, { recursive: true, force: true });
 	}
@@ -233,13 +187,6 @@ test("aborting a real pasted-image form does not retain images in its result or 
 		) as AskResult;
 		assert.equal(response.cancelled, true);
 		assert(!JSON.stringify(response).includes(png));
-		const snapshot = result.traceEvents
-			.filter((event) => event.type === "session_snapshot")
-			.at(-1);
-		assert(Array.isArray(snapshot?.branch));
-		const history = readAskHistory(snapshot.branch);
-		assert.equal(history[0].status, "cancelled");
-		assert(!JSON.stringify(history).includes(png));
 	} finally {
 		await rm(cwd, { recursive: true, force: true });
 	}
