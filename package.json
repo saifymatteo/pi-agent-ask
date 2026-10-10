@@ -1,6 +1,6 @@
 {
   "name": "@saifymatteo/pi-agent-ask",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Let your Pi agent ask instead of guessing, and keep working while you answer",
   "license": "MIT",
   "author": "saifymatteo",
