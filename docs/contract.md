@@ -218,7 +218,7 @@ remain standard tool errors.
 
 ## Clipboard images
 
-The custom-answer, question-note, and option-note editors accept images through Pi's configured `app.clipboard.pasteImage` shortcut. The form displays the active shortcut. Text paste stays with the native editor. `Ctrl+Alt+D` removes the last image in the current editor; configured Ask commands take precedence over these image actions.
+The custom-answer, question-note, and option-note editors accept images through Pi's configured `app.clipboard.pasteImage` shortcut. When that action has no bound keys, Ask uses `Alt+V` and `Ctrl+Alt+V` within these editors only, without changing the host configuration or normal chat shortcuts. Explicitly configured nonempty bindings replace those fallbacks. The form displays the active shortcuts. Text paste stays with the native editor. `Ctrl+Alt+D` removes the last image in the current editor; configured Ask commands take precedence over these image actions.
 
 - Text is optional; an image-only custom answer counts as answered.
 - Multiple images stay with their editor when saving, reopening, or changing tabs.
@@ -234,7 +234,11 @@ Normal tool results, background messages, direct waits, recovered answer deliver
 
 Submitted image data is stored in the session journal and survives reload and resume. History exports embed image data URIs in the Markdown file, with the owning answer/note identified; viewers without data-URI support still keep the bytes in that file.
 
-Only clipboard input in the TUI is supported. Linux uses a native clipboard or `wl-paste`/`xclip`; WSL can fall back to Windows clipboard access through PowerShell. This adds no file picker, path input, graphical preview, or remote-client image-upload protocol.
+Only clipboard input in the TUI is supported. Ask first requests image bytes from a trusted clipboard extension through the [clipboard provider events](remote-events.md#clipboard-provider). Provider images must be PNG, JPEG, WebP, or GIF, with nonempty base64 data of at most 20 MiB decoded. The provider owns platform reads and may support copied image files; Ask owns attachment state and delivery. No chat draft markers, chat attachments, or temporary file paths are required by this bridge.
+
+If no provider synchronously claims the request, Ask uses its built-in reader. A provider's empty result, error, or 25-second timeout does not trigger a second clipboard read. Closing the form removes its pending provider listener; late replies cannot attach to another editor. Foreground, background, and recovered forms use the same bridge.
+
+The built-in Linux reader uses a native clipboard or `wl-paste`/`xclip`; WSL can fall back to Windows clipboard access through PowerShell. This adds no file picker, path input, graphical preview, or remote-client image-upload protocol.
 
 ## Background queue
 

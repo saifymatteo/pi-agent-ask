@@ -32,7 +32,8 @@ The codebase is split so the implementation reads through file boundaries and na
 - `src/preview-files.ts` — validates and loads local UTF-8 preview files before UI and payload capture; state and rendering remain filesystem-free
 - `src/types.ts` — shared types
 - `src/images.ts` — attachment markers and model image blocks with question/note context
-- `src/clipboard-image.ts` — public native clipboard, Linux command, and WSL clipboard adapters; temporary files are removed after reading
+- `src/clipboard-image.ts` — provider-first image reads, with native clipboard, Linux command, and WSL adapters as fallback; temporary files are removed after reading
+- `src/clipboard-events.ts` — correlated clipboard-provider requests, image validation, timeout, and listener cleanup; providers never own Ask's editor state
 
 ### State
 

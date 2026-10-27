@@ -2,7 +2,12 @@ import type {
 	ExtensionAPI,
 	ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import { Editor, type EditorTheme, matchesKey } from "@earendil-works/pi-tui";
+import {
+	Editor,
+	type EditorTheme,
+	type KeyId,
+	matchesKey,
+} from "@earendil-works/pi-tui";
 import { withAskSurface } from "../ask-surface.ts";
 import { invalidPayloadResponse } from "../ask-tool-helpers.ts";
 import { readClipboardImage } from "../clipboard-image.ts";
@@ -78,6 +83,7 @@ type Done = (result: AskResult) => void;
 type AskEvents = Pick<ExtensionAPI["events"], "emit">;
 
 interface AskFlowOptions {
+	clipboardEvents?: ExtensionAPI["events"];
 	herdrEvents?: AskEvents;
 	keepVisible?: boolean;
 	presentSingleAsMulti?: boolean;
@@ -98,6 +104,8 @@ type AskFlowParams = AskParams &
 	};
 
 interface AskFlowController {
+	clipboardAbort: AbortController;
+	clipboardEvents?: ExtensionAPI["events"];
 	clipboardNotice?: string;
 	clipboardReading: boolean;
 	config: AskConfig;
@@ -189,6 +197,8 @@ function createAskFlowController(
 	params: AskFlowParams
 ) {
 	const controller: AskFlowController = {
+		clipboardAbort: new AbortController(),
+		clipboardEvents: params.flowOptions.clipboardEvents,
 		clipboardReading: false,
 		disposed: false,
 		keybindings,
@@ -252,6 +262,7 @@ function createAskFlowController(
 		},
 		dispose() {
 			controller.disposed = true;
+			controller.clipboardAbort.abort();
 			params.flowOptions.signal?.removeEventListener("abort", abort);
 			controller.remoteFlow?.dispose();
 			controller.unsubscribeConfig();
@@ -285,7 +296,7 @@ function handleControllerInput(controller: AskFlowController, data: string) {
 	if (isEditingView(controller.state)) {
 		if (
 			command.kind === "delegateToEditor" &&
-			controller.keybindings.matches(data, "app.clipboard.pasteImage")
+			getImagePasteKeys(controller).some((key) => matchesKey(data, key))
 		) {
 			pasteImage(controller);
 			return;
@@ -329,7 +340,10 @@ async function pasteImage(controller: AskFlowController): Promise<void> {
 	controller.clipboardNotice = "Reading image clipboard…";
 	refresh(controller);
 	try {
-		const image = await readClipboardImage();
+		const image = await readClipboardImage(
+			controller.clipboardEvents,
+			controller.clipboardAbort.signal
+		);
 		if (!isPasteTarget(controller, view)) {
 			return;
 		}
@@ -668,6 +682,11 @@ function handleReviewShortcutNumber(
 	return true;
 }
 
+function getImagePasteKeys(controller: AskFlowController): KeyId[] {
+	const keys = controller.keybindings.getKeys("app.clipboard.pasteImage");
+	return keys.length ? keys : ["alt+v", "ctrl+alt+v"];
+}
+
 function getFooterNotice(controller: AskFlowController): string | undefined {
 	const notice =
 		controller.clipboardNotice ??
@@ -676,10 +695,8 @@ function getFooterNotice(controller: AskFlowController): string | undefined {
 	if (!isEditingView(controller.state)) {
 		return notice;
 	}
-	const keys = controller.keybindings
-		.getKeys("app.clipboard.pasteImage")
-		.join("/");
-	const hint = `${keys || "Paste image"}: attach image${getEditorImages(controller.state).length ? " · Ctrl+Alt+D: remove last image" : ""}`;
+	const keys = getImagePasteKeys(controller).join("/");
+	const hint = `${keys}: attach image${getEditorImages(controller.state).length ? " · Ctrl+Alt+D: remove last image" : ""}`;
 	return [notice, hint].filter(Boolean).join("\n");
 }
 

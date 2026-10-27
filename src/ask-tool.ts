@@ -159,6 +159,7 @@ async function executeRecordedAsk(
 			remote: remoteAsk
 				? { runtime: remoteAsk, source: "tool", toolCallId }
 				: undefined,
+			clipboardEvents: pi.events,
 			herdrEvents: pi.events,
 		});
 		return recordResponse(pi, requestId, successfulResponse(result));

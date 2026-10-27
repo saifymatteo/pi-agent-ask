@@ -41,11 +41,13 @@ Questions can be `single`, `multi`, or `preview`. The extension opens only in TU
 
 ## Paste a screenshot into your answer
 
-In **Type your own**, a question note, or an option note, use Pi's image-paste shortcut shown in the form. It is usually `Ctrl+V` on Linux/macOS and `Alt+V` on Windows/WSL. Paste several images if needed; `Ctrl+Alt+D` removes the last image in that editor.
+In **Type your own**, a question note, or an option note, use Pi's image-paste shortcut shown in the form. It is usually `Ctrl+V` on Linux/macOS and `Alt+V` on Windows/WSL. If Pi's image-paste binding is disabled, Ask uses `Alt+V` or `Ctrl+Alt+V` inside its editors without changing normal chat shortcuts. Paste several images if needed; `Ctrl+Alt+D` removes the last image in that editor.
 
-The form shows `[1 image]`, not a graphical preview. Text is optional. The agent receives the image itself, including in background answers and clarification requests. Images stay in session history. File-path attachments and remote-client image uploads are not included.
+The form shows `[1 image]`, not a graphical preview. Text is optional. The agent receives the image itself, including in background answers and clarification requests. Images stay in session history. Direct file-path attachments and remote-client image uploads are not included.
 
-Linux needs a working native clipboard, `wl-paste`, or `xclip`. WSL can read screenshots from the Windows clipboard through PowerShell.
+If a clipboard extension implements the [clipboard provider events](docs/remote-events.md#clipboard-provider), Ask uses it to read images without touching the chat draft. This can also support copied image files on Windows when the provider handles them. Load both extensions and reload Pi; no Ask setting is needed.
+
+Without a provider, Ask uses its built-in reader. Linux needs a working native clipboard, `wl-paste`, or `xclip`. WSL can read screenshots from the Windows clipboard through PowerShell.
 
 ## Recovery
 

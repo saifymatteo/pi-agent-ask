@@ -285,6 +285,7 @@ export class BackgroundAskRuntime {
 				keepVisible: true,
 				signal,
 				presentSingleAsMulti: request.presentSingleAsMulti,
+				clipboardEvents: this.pi.events,
 				herdrEvents: this.pi.events,
 				remote: this.remoteAsk
 					? {

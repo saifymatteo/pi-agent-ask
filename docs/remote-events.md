@@ -83,6 +83,33 @@ Correlate responses with `requestId` and `flowId`. Do not assume ordering betwee
 
 Third-party bridges own their UI policy and value mappings. They must use explicit values rather than ask the extension to infer approval semantics.
 
+## Clipboard provider
+
+A trusted extension can supply clipboard image bytes without changing the chat draft. Ask sends this request only when the user invokes image paste inside an answer or note editor:
+
+```ts
+// pi-agent-ask:clipboard-request
+ type ClipboardRequest = { version: 1; requestId: string };
+
+// pi-agent-ask:clipboard-result
+ type ClipboardResult =
+  | { version: 1; requestId: string; status: "reading" }
+  | { version: 1; requestId: string; status: "empty" }
+  | { version: 1; requestId: string; status: "error"; message: string }
+  | {
+      version: 1;
+      requestId: string;
+      status: "image";
+      image: { mimeType: string; data: string };
+    };
+```
+
+The provider must emit `reading` **synchronously, before its first await**, then send one final result with the same `requestId`. A synchronous final result also claims the request. With no synchronous claim, Ask immediately removes its listener and uses the built-in clipboard reader. Load order does not matter once both extensions have registered. Load only one clipboard provider.
+
+A claimed request has a 25-second deadline. Empty results and errors are authoritative: Ask does not fall back or reread the clipboard. Abort/disposal, completion, and timeout remove the result listener. Ignore stale work after extension shutdown; do not queue these images for a later chat submission.
+
+`data` is canonical base64 without a data-URI prefix, nonempty and at most 20 MiB decoded. Supported MIME types are `image/png`, `image/jpeg`, `image/webp`, and `image/gif`; convert BMP before replying. Ask creates its own attachment id and preserves the existing question/note association, history, and model image delivery. Invalid image replies show an error rather than invoking fallback.
+
 ## Verify locally
 
 The real-Pi tests cover the local lifecycle and submit channels:

@@ -75,6 +75,7 @@ async function reopenPendingAsk(
 				source: "ask:resume",
 				toolCallId: pendingAsk.toolCallId,
 			},
+			clipboardEvents: pi.events,
 			herdrEvents: pi.events,
 		});
 	} finally {

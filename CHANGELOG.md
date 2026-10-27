@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+- Reuse compatible clipboard extensions inside Ask answers and notes through optional provider events, with built-in clipboard reading as fallback when no provider is loaded.
+- Keep Alt+V and Ctrl+Alt+V available inside Ask when Pi's image-paste binding is disabled, without changing normal chat shortcuts.
+- Validate provider images and clean up pending reads so late replies cannot attach to a closed editor.
+
 ## 1.0.1
 
 - Align image integration coverage with the trimmed fork's two-tool surface.

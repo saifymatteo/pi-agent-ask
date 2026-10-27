@@ -4,8 +4,12 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import { convertToPng } from "@earendil-works/pi-coding-agent";
+import {
+	convertToPng,
+	type ExtensionAPI,
+} from "@earendil-works/pi-coding-agent";
 import { getNativeClipboard } from "@earendil-works/pi-tui";
+import { requestClipboardImage } from "./clipboard-events.ts";
 import type { AskImage } from "./types.ts";
 
 const execute = promisify(execFile);
@@ -115,7 +119,17 @@ async function readLinuxClipboard(): Promise<AskImage | null | undefined> {
 }
 
 /** Read an explicit clipboard paste without changing the clipboard or keeping temporary files. */
-export async function readClipboardImage(): Promise<AskImage | null> {
+export async function readClipboardImage(
+	events?: ExtensionAPI["events"],
+	signal = new AbortController().signal
+): Promise<AskImage | null> {
+	signal.throwIfAborted();
+	if (events) {
+		const image = await requestClipboardImage(events, signal);
+		if (image !== undefined) {
+			return image;
+		}
+	}
 	if (process.platform === "linux") {
 		const image = await readLinuxClipboard();
 		if (image !== undefined) {
