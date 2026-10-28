@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1
+
+- Reduce agent context with shorter tool descriptions and field-local guidance while preserving the API and interactive features.
+- Guide agents to use preview files for long content already on disk instead of copying it into tool calls.
+- Add regression checks for guidance and schema sizes.
+
 ## 1.1.0
 
 - Reuse compatible clipboard extensions inside Ask answers and notes through optional provider events, with built-in clipboard reading as fallback when no provider is loaded.
