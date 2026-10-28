@@ -364,7 +364,9 @@ test("registered ask_user returns a typed receipt and rejects invalid forms befo
 	assert.equal(result.details.status, "queued");
 	assert.ok(result.content[0].text.includes("This is not an answer"));
 	assert.ok(
-		tool.promptGuidelines.some((line: string) => line.includes("Never guess"))
+		tool.promptGuidelines.some((line: string) =>
+			line.includes("Wait for explicit answers")
+		)
 	);
 	await tick();
 	const invalid = await tool.execute(

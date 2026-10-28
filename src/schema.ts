@@ -3,66 +3,60 @@ import { Type } from "typebox";
 
 export const AskOptionSchema = Type.Object({
 	value: Type.String({
-		description:
-			"Required machine-readable value returned for this option in the result",
+		description: "Stable answer value",
 	}),
 	label: Type.String({
-		description: "Required short visible option label shown in the list",
+		description: "Short visible label",
 	}),
 	description: Type.Optional(
 		Type.String({
-			description: "Optional one-line explanation to help the user choose",
+			description: "One-line explanation",
 		})
 	),
 	preview: Type.Optional(
 		Type.String({
-			description:
-				"Optional preview content shown in the dedicated preview pane for preview questions",
+			description: "Preview-pane text",
 		})
 	),
 	previewFile: Type.Optional(
 		Type.String({
 			description:
-				"Local UTF-8 text file to show in the preview pane instead of preview text. Absolute path or relative to Pi's working directory. Do not combine with preview.",
+				"For long content already on disk. UTF-8 path, absolute or relative to cwd; use instead of preview.",
 		})
 	),
 	recommended: Type.Optional(
 		Type.Boolean({
 			description:
-				"Optional presentation marker for a grounded preference; use the description to explain the reason",
+				"Mark grounded preferences; explain why in description. Not preselected.",
 		})
 	),
 });
 
 export const AskQuestionSchema = Type.Object({
 	id: Type.String({
-		description:
-			"Required stable question identifier used as the key in returned answers",
+		description: "Stable key in returned answers",
 	}),
 	label: Type.Optional(
 		Type.String({
-			description: "Short tab label, e.g. Goal, Audience, Tone, Scope",
+			description: "Short tab label",
 		})
 	),
 	prompt: Type.String({
-		description:
-			"Required direct question shown to the user; ask about one decision at a time",
+		description: "Ask one decision per question",
 	}),
 	type: Type.Optional(
 		StringEnum(["single", "multi", "preview"] as const, {
 			description:
-				"Question type: `single` means one answer is expected, `multi` means multiple answers could reasonably be selected, and `preview` means options need preview-pane detail. Use `preview` only when every option includes `preview` text or a local UTF-8 `previewFile` path; descriptions alone are not enough.",
+				"single (default): one choice; multi: several; preview: every option needs preview or previewFile.",
 		})
 	),
 	required: Type.Optional(
 		Type.Boolean({
-			description:
-				"Advisory only; marks the question as important but never blocks submission",
+			description: "Advisory only; never blocks submission",
 		})
 	),
 	options: Type.Array(AskOptionSchema, {
-		description:
-			"Answer options; provide clear, distinct choices and do not add filler options",
+		description: "Distinct, relevant choices",
 	}),
 });
 
@@ -70,16 +64,9 @@ export const AskParamsSchema = Type.Object({
 	background: Type.Optional(
 		Type.Boolean({
 			description:
-				"Queue this form and return a request ID immediately. Continue only independent work; receive the completed form between turns or call wait_for_answers when blocked on answers.",
+				"Queue and return a receipt, not an answer; answers arrive asynchronously or through wait_for_answers.",
 		})
 	),
-	title: Type.Optional(
-		Type.String({
-			description:
-				"Optional short title shown above the clarification flow, e.g. README direction",
-		})
-	),
-	questions: Type.Array(AskQuestionSchema, {
-		description: "Questions to ask in the interactive clarification flow",
-	}),
+	title: Type.Optional(Type.String()),
+	questions: Type.Array(AskQuestionSchema),
 });

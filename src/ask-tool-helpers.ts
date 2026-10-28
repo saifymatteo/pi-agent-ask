@@ -18,13 +18,11 @@ import type {
 } from "./types.ts";
 
 export const ASK_TOOL_DESCRIPTION =
-	"Ask the user a short structured interview when the next step depends on their preference, missing requirements, or a choice between valid directions. Returns the answers as structured data to continue with, instead of guessing.";
+	"Open an interactive question form and return structured answers.";
 
 export const ASK_TOOL_PROMPT_GUIDELINES = [
-	"Call `ask_user` before a consequential or ambiguous decision — scope, architecture, naming, UX, tone, requirements, or any choice the user would want to own — and let the user pick the path.",
-	"Set `background: true` when you can keep working while the user answers; its receipt is not an answer. Never guess answers for pending forms or cross a dependent, approval, or irreversible step; call `wait_for_answers` when independent work is exhausted.",
-	"Ask one focused decision per question with short, distinct option labels; mark grounded preferences with `recommended: true` and explain the reason in the option `description`.",
-	"Choose `type` from the semantics: `single` for one answer, `multi` when several can apply, and `preview` only when every option has non-empty `preview` text or a local UTF-8 `previewFile` path.",
+	"Use `ask_user` before consequential or ambiguous decisions the user should own.",
+	"While `background: true` forms are pending, continue independent work. Wait for explicit answers before dependent or irreversible steps; use `wait_for_answers` when blocked.",
 ] as const;
 
 interface ValidateParamsOptions {

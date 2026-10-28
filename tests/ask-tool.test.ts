@@ -2,6 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { Value } from "typebox/value";
 import { registerAskTool } from "../src/ask-tool.ts";
+import {
+	ASK_TOOL_DESCRIPTION,
+	ASK_TOOL_PROMPT_GUIDELINES,
+} from "../src/ask-tool-helpers.ts";
 import { AskOptionSchema, AskParamsSchema } from "../src/schema.ts";
 import type { AskParams } from "../src/types.ts";
 
@@ -179,9 +183,7 @@ function sampleParams(): AskParams {
 	};
 }
 
-test("ask option schema and tool guidance support grounded recommendations", () => {
-	const { tool } = registerMockTool();
-
+test("ask option schema supports grounded recommendations", () => {
 	assert.equal(
 		Value.Check(AskOptionSchema, {
 			value: "small",
@@ -191,13 +193,32 @@ test("ask option schema and tool guidance support grounded recommendations", () 
 		}),
 		true
 	);
-	assert(
-		tool.promptGuidelines.some(
-			(guideline) =>
-				guideline.includes("grounded preferences") &&
-				guideline.includes("description")
-		)
-	);
+	const recommended = AskOptionSchema.properties.recommended;
+	assert("description" in recommended);
+	assert(typeof recommended.description === "string");
+	assert(recommended.description.includes("grounded preferences"));
+	assert(recommended.description.includes("description"));
+});
+
+test("ask guidance stays compact without dropping decision and approval gates", () => {
+	const guidance = ASK_TOOL_PROMPT_GUIDELINES.join("\n");
+	assert(ASK_TOOL_DESCRIPTION.length + guidance.length < 400);
+	assert(guidance.includes("consequential or ambiguous"));
+	assert(guidance.includes("continue independent work"));
+	assert(guidance.includes("Wait for explicit answers"));
+	assert(guidance.includes("dependent or irreversible"));
+	assert(guidance.includes("wait_for_answers"));
+	assert.equal(guidance.includes("previewFile"), false);
+	assert.equal(guidance.includes("recommended"), false);
+	const previewFile = AskOptionSchema.properties.previewFile;
+	assert("description" in previewFile);
+	assert(typeof previewFile.description === "string");
+	assert(previewFile.description.includes("long content already on disk"));
+	const prompt = AskParamsSchema.properties.questions.items.properties.prompt;
+	assert("description" in prompt);
+	assert(typeof prompt.description === "string");
+	assert(prompt.description.includes("one decision per question"));
+	assert(JSON.stringify(AskParamsSchema).length < 1600);
 });
 
 test("ask params schema constrains question types", () => {

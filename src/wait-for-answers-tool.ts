@@ -19,11 +19,10 @@ export function registerWaitForAnswersTool(
 		exposure: "model-only",
 		label: "Wait for Answers",
 		description:
-			"Wait until all outstanding background ask_user forms finish. Use when no independent work remains or before a step that depends on answers. No built-in timeout. Aborting the wait leaves questions queued. Returns only results not already delivered asynchronously; cancellation and elaboration are not approval.",
-		promptSnippet:
-			"Wait for pending background user answers before dependent decisions",
+			"Wait for all outstanding background ask_user forms. No timeout; aborting leaves forms queued. Returns only undelivered results.",
+		promptSnippet: "Wait for pending user answers",
 		promptGuidelines: [
-			"Use wait_for_answers when independent work is exhausted. Read existing background-answer messages too; results already delivered there are not repeated by this tool.",
+			"Read delivered background answers. Treat cancellation as no approval and elaboration as a clarification request.",
 		],
 		parameters: Type.Object({}),
 		outputSchema: WaitForAnswersSchema,

@@ -38,8 +38,7 @@ export function registerAskTool(
 		name: "ask_user",
 		label: "Ask User",
 		description: ASK_TOOL_DESCRIPTION,
-		promptSnippet:
-			"Clarify ambiguous or preference-sensitive decisions with a short interactive interview before proceeding",
+		promptSnippet: "Interactive question form",
 		promptGuidelines: [...ASK_TOOL_PROMPT_GUIDELINES],
 		parameters: AskParamsSchema,
 		outputSchema: Type.Union([AskResultSchema, AskQueuedSchema]),

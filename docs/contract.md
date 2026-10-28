@@ -179,6 +179,10 @@ and TUI rendering. Submitted, elaborated, cancelled, invalid-input, and non-TUI
 results all use this structure. Pi schema-validation failures before execution
 remain standard tool errors.
 
+Tool descriptions and field help are kept compact without removing input or result
+fields. For long content already on disk, prefer `previewFile` to avoid repeating
+that content in tool-call arguments; the UI and recovery still use the loaded text.
+
 ## Output rules
 
 - `cancelled: true` means the user dismissed the flow, UI was unavailable, or the payload was invalid before UI opened

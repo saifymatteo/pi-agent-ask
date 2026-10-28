@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { Value } from "typebox/value";
 import { successfulResponse } from "../src/ask-tool-helpers.ts";
+import { WaitForAnswersSchema } from "../src/background-ask-state.ts";
 import { AskResultSchema } from "../src/result-schema.ts";
 import { createInitialState } from "../src/state/create.ts";
 import { toAskResult } from "../src/state/result.ts";
@@ -67,6 +68,11 @@ test("elaboration preserves question and option notes in structured output", () 
 		"refine_only"
 	);
 	assert.deepEqual(response.structuredContent.answers.choice.values, ["doc"]);
+});
+
+test("output schemas stay within their context budgets", () => {
+	assert(JSON.stringify(AskResultSchema).length < 9500);
+	assert(JSON.stringify(WaitForAnswersSchema).length < 10_000);
 });
 
 test("the output schema rejects malformed nested answers", () => {

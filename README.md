@@ -55,7 +55,7 @@ The question journal survives **compaction, reload, and resume**, and follows th
 
 ## The trimmed fork
 
-This is a trimmed fork. It keeps the interactive form UI, the background queue, `wait_for_answers`, journal-based form recovery, and Herdr status. It removes the agent-facing history tools, the bundled skill, the config system-prompt line, and external UI negotiation. The agent-facing surface is two tools with a short description and four prompt guidelines.
+This is a trimmed fork. It keeps the interactive form UI, the background queue, `wait_for_answers`, journal-based form recovery, and Herdr status. It removes the agent-facing history tools, the bundled skill, the config system-prompt line, and external UI negotiation. The agent-facing surface is two tools with compact descriptions. Workflow guidance covers decision and answer gates; question-writing rules live beside their input fields. For long previews already on disk, agents are guided to use `previewFile` instead of copying the text into a tool call.
 
 - [configuration](docs/configuration.md)
 - [tool contract](docs/contract.md)
