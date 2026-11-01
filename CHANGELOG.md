@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+
+- Rewrite the README to credit the upstream projects and their original READMEs, listing only this fork's changes.
+
 ## 1.1.1
 
 - Reduce agent context with shorter tool descriptions and field-local guidance while preserving the API and interactive features.
