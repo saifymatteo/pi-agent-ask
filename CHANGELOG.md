@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.0
+
+- Keep long inline and file-backed proposals readable in a bounded, styled preview pane, with the options and footer outside the paged content.
+- Add PageUp/PageDown and Home/End navigation, a visible row range, and layout recalculation on terminal resize.
+- Support hover-targeted mouse-wheel scrolling in fullscreen mode: scroll the preview or transcript independently without changing keyboard focus or spilling past preview boundaries.
+- Preserve native answer/note editor shortcuts and support the same preview navigation in foreground, background, and recovered forms.
+
 ## 1.1.2
 
 - Rewrite the README to credit the upstream projects and their original READMEs, listing only this fork's changes.
