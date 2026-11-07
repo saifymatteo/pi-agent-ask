@@ -220,6 +220,21 @@ that content in tool-call arguments; the UI and recovery still use the loaded te
 - elaborate `content` text and transcript rendering describe each note directly using the full question prompt and option label, and include the current committed answer text when available, instead of a generic elaboration banner
 - when the user selects `Elaborate` without adding notes, elaborate `content` text and transcript rendering still include the committed answer text so the agent can elaborate on that answer directly
 
+## Preview navigation
+
+Preview panes are bounded by the available terminal height and paginate rendered rows after wrapping. The existing box styling, option list, and footer remain in place; very small terminals or unusually long prompts/options/notes may still exceed the screen even with a one-row preview.
+
+- `PageUp` / `PageDown` move one visible preview page; `Home` / `End` jump to the first/last page.
+- In fullscreen mode, wheel events over the preview box or its row indicator scroll the preview by Pi's normalized wheel delta, respecting Pi's wheel speed and acceleration. Events outside that region remain unhandled for Pi's normal routing, including transcript scrolling.
+- Wheel events inside the preview are consumed even at its boundaries or when its content fits, so they never spill into transcript scrolling. They do not change keyboard focus; a note editor can remain active while the preview scrolls. Other mouse events are not intercepted.
+- Regular mode leaves mouse input to the terminal; keyboard preview navigation remains available.
+- Overflowing panes show their visible row range, total wrapped rows, and navigation hints. These are display rows, not source-file line numbers.
+- Switching options, tabs, or question types resets the preview to the beginning. Resizing clamps the position to the new page size.
+- Configured Ask navigation bindings take precedence over preview paging. While editing an answer or note, the keys stay with the native text editor instead of paging the proposal.
+- Foreground, background, and recovered forms use the same pagination. The focused preview form claims Pi's fullscreen viewport input so transcript paging cannot swallow these keys; other question types and Review do not claim it.
+
+Pagination never truncates the saved proposal or changes answers. Inline `preview` and loaded `previewFile` text behave identically. The page position is transient UI state, not part of tool results or the persisted proposal snapshot.
+
 ## Clipboard images
 
 The custom-answer, question-note, and option-note editors accept images through Pi's configured `app.clipboard.pasteImage` shortcut. When that action has no bound keys, Ask uses `Alt+V` and `Ctrl+Alt+V` within these editors only, without changing the host configuration or normal chat shortcuts. Explicitly configured nonempty bindings replace those fallbacks. The form displays the active shortcuts. Text paste stays with the native editor. `Ctrl+Alt+D` removes the last image in the current editor; configured Ask commands take precedence over these image actions.

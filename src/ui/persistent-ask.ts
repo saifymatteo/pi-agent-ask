@@ -4,7 +4,11 @@ import type { AskResult } from "../types.ts";
 import { containsEditor } from "./wait-for-editor.ts";
 
 type CustomArgs = Parameters<Parameters<ExtensionContext["ui"]["custom"]>[0]>;
-type AskComponent = Component & Partial<Focusable> & { dispose?(): void };
+type AskComponent = Component &
+	Partial<Focusable> & {
+		capturesViewportInput?: boolean;
+		dispose?(): void;
+	};
 type AskFactory = (
 	tui: CustomArgs[0],
 	theme: CustomArgs[1],
@@ -31,6 +35,9 @@ export async function showPersistentAsk(
 		component?.dispose?.();
 	};
 	const surface: AskComponent = {
+		get capturesViewportInput() {
+			return component?.capturesViewportInput ?? false;
+		},
 		get focused() {
 			return component?.focused ?? false;
 		},
@@ -42,6 +49,7 @@ export async function showPersistentAsk(
 		render: (width) => component?.render(width) ?? [],
 		invalidate: () => component?.invalidate(),
 		handleInput: (data) => component?.handleInput?.(data),
+		handleMouse: (event) => component?.handleMouse?.(event),
 		dispose() {
 			if (result) {
 				dispose();

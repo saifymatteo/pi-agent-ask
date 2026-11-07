@@ -30,6 +30,12 @@ Differences from upstream:
 
 Fork-specific docs: [configuration](docs/configuration.md), [tool contract](docs/contract.md), [integration events](docs/remote-events.md).
 
+## Long previews
+
+Long file proposals stay inside Ask's styled preview pane. Use **PageUp/PageDown** to page through the text or **Home/End** to jump to its beginning/end; an overflowing pane shows the visible row range. Options and footer controls stay outside the paged content. These keys continue to control text editing while an answer or note editor is open.
+
+In **fullscreen mode**, hover over the preview and use the mouse wheel to scroll its text. Hover over the transcript to scroll that instead. Scrolling stops at the preview's ends without spilling into the transcript or changing keyboard focus. In regular mode, the terminal owns mouse scrolling; use the keyboard to page the preview.
+
 ## License
 
 [MIT](LICENSE)

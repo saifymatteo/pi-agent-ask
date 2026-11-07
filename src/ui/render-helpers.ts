@@ -9,6 +9,10 @@ import { NO_PREVIEW_TEXT } from "../constants/text.ts";
 import { UI_DIMENSIONS, UI_TEXT } from "../constants/ui.ts";
 import { clamp } from "../math.ts";
 import { wrapText } from "../text.ts";
+import {
+	getPreviewPage,
+	type PreviewPagination,
+} from "./preview-pagination.ts";
 
 type Theme = ExtensionContext["ui"]["theme"];
 type ThemeColor =
@@ -266,6 +270,45 @@ export function renderPreviewPaneContent(
 				description?: string;
 				preview?: string;
 		  }
+		| undefined,
+	theme: Theme,
+	width: number,
+	options: {
+		maxHeight?: number;
+		pagination?: PreviewPagination;
+		x?: number;
+		y?: number;
+	} = {}
+): string[] {
+	const full = renderFullPreviewPane(selectedOption, theme, width);
+	const total = full.length - 2;
+	const overflowing =
+		options.maxHeight !== undefined && full.length > options.maxHeight;
+	const maxRows = overflowing
+		? Math.max(1, (options.maxHeight ?? full.length) - 3)
+		: undefined;
+	const page = getPreviewPage(total, maxRows, options.pagination?.offset ?? 0);
+	options.pagination?.onLayout(page, {
+		x: options.x ?? 0,
+		y: options.y ?? 0,
+		width,
+		height: overflowing ? page.pageSize + 3 : full.length,
+	});
+	if (!overflowing) {
+		return full;
+	}
+	const hint = `Rows ${page.offset + 1}–${page.offset + page.pageSize} / ${page.total} · PgUp/PgDn · Home/End`;
+	return [
+		full[0],
+		...full.slice(page.offset + 1, page.offset + page.pageSize + 1),
+		full.at(-1) ?? "",
+		theme.fg("dim", truncateToWidth(hint, width)),
+	];
+}
+
+function renderFullPreviewPane(
+	selectedOption:
+		| { label: string; description?: string; preview?: string }
 		| undefined,
 	theme: Theme,
 	width: number

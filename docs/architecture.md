@@ -60,7 +60,8 @@ The codebase is split so the implementation reads through file boundaries and na
 - `src/ui/persistent-ask.ts` — remounts a background form when later lifecycle cleanup replaces its slot; the same controller keeps answers, notes, and editor drafts
 - `src/ui/input.ts` — raw input to commands using resolved context-aware config-backed keymaps
 - `src/ui/dismiss-guard.ts` — pure helpers for dirty-flow exit confirmation behavior
-- `src/ui/render.ts` and `src/ui/render-*.ts` — screen rendering, including config-backed footer/keymap hints
+- `src/ui/render.ts` and `src/ui/render-*.ts` — screen rendering, including config-backed footer/keymap hints and preview height budgeting from measured frame, option, and note rows
+- `src/ui/preview-pagination.ts` — pure wrapped-row page measurement and navigation plus preview bounds types; the controller keeps transient page state, and rendering reports the measured page and component-local hitbox
 - `src/ui/settings-list.ts` / `src/ui/show-settings.ts` — lightweight ask settings list rendering and launcher
 - `src/ui/constants.ts` and `src/ui/render-types.ts` — rendering constants/contracts
 
@@ -86,6 +87,8 @@ The codebase is split so the implementation reads through file boundaries and na
 - single-select free-form answers replace selected options for that question
 - multi-select free-form answers augment selected options instead of clearing them
 - preview questions keep their preview-pane behavior while also supporting the synthetic custom-answer option
+- preview paging changes only the visible wrapped rows, never proposal snapshots or answers; fullscreen input ownership and mouse events are forwarded through persistent background surfaces, and native editors retain their own navigation keys
+- preview wheel handling uses the rendered box/indicator bounds in component-local coordinates; outside events fall through to Pi, while events inside stay consumed at the scroll limits without changing keyboard focus
 - deselected option notes stay in UI state
 - only selected option notes are emitted in the final result
 - editor lifecycle stays in the controller, not in the reducers

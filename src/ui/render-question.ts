@@ -25,12 +25,22 @@ import {
 export function renderQuestionScreen(context: QuestionRenderContext) {
 	const { lines, question, theme, width } = context;
 	const model = buildQuestionScreenModel(context);
+	const start = lines.length;
 
 	pushWrappedText(lines, question.prompt, width, theme, "text", " ", " ");
 	renderQuestionNote(lines, model.questionNote, context);
 
 	if (model.mode === "preview") {
-		renderPreviewQuestion(context, model);
+		renderPreviewQuestion(
+			{
+				...context,
+				height:
+					context.height === undefined
+						? undefined
+						: context.height - (lines.length - start),
+			},
+			model
+		);
 		return;
 	}
 
@@ -111,6 +121,14 @@ function renderPreviewQuestion(
 
 	const { lines, width, theme } = context;
 	const add = (text = "") => lines.push(truncateToWidth(text, width));
+	const detail: string[] = [];
+	renderOptionDetail(detail, model.selectedOptionDetail, context);
+	const paneOptions = {
+		maxHeight:
+			context.height === undefined ? undefined : context.height - detail.length,
+		pagination: context.preview,
+		y: lines.length,
+	};
 
 	if (model.previewLayout === "custom") {
 		renderPreviewOptionList(model.rows, theme, width).forEach(add);
@@ -120,7 +138,8 @@ function renderPreviewQuestion(
 			model.rows,
 			theme,
 			width,
-			model.selectedOption
+			model.selectedOption,
+			paneOptions
 		);
 	} else {
 		renderStackedPreviewLayout(
@@ -128,11 +147,12 @@ function renderPreviewQuestion(
 			model.rows,
 			theme,
 			width,
-			model.selectedOption
+			model.selectedOption,
+			paneOptions
 		);
 	}
 
-	renderOptionDetail(lines, model.selectedOptionDetail, context);
+	lines.push(...detail);
 }
 
 function renderWidePreviewLayout(
@@ -140,7 +160,8 @@ function renderWidePreviewLayout(
 	rows: OptionRowModel[],
 	theme: Theme,
 	width: number,
-	selectedOption: ReturnType<typeof buildQuestionScreenModel>["selectedOption"]
+	selectedOption: ReturnType<typeof buildQuestionScreenModel>["selectedOption"],
+	paneOptions: NonNullable<Parameters<typeof renderPreviewPaneContent>[3]>
 ) {
 	const leftWidth = measurePreviewLeftWidth(rows, width);
 	const rightWidth = Math.max(
@@ -148,7 +169,12 @@ function renderWidePreviewLayout(
 		width - leftWidth - 2
 	);
 	const leftPane = renderPreviewOptionList(rows, theme, leftWidth);
-	const rightPane = renderPreviewPaneContent(selectedOption, theme, rightWidth);
+	const rightPane = renderPreviewPaneContent(
+		selectedOption,
+		theme,
+		rightWidth,
+		{ ...paneOptions, x: leftWidth + 2 }
+	);
 	for (const line of mergeColumns(leftPane, rightPane, leftWidth, width)) {
 		add(line);
 	}
@@ -159,11 +185,20 @@ function renderStackedPreviewLayout(
 	rows: OptionRowModel[],
 	theme: Theme,
 	width: number,
-	selectedOption: ReturnType<typeof buildQuestionScreenModel>["selectedOption"]
+	selectedOption: ReturnType<typeof buildQuestionScreenModel>["selectedOption"],
+	paneOptions: NonNullable<Parameters<typeof renderPreviewPaneContent>[3]>
 ) {
-	renderPreviewOptionList(rows, theme, width).forEach(add);
+	const options = renderPreviewOptionList(rows, theme, width);
+	options.forEach(add);
 	add("");
-	renderPreviewPaneContent(selectedOption, theme, width).forEach(add);
+	renderPreviewPaneContent(selectedOption, theme, width, {
+		...paneOptions,
+		y: (paneOptions.y ?? 0) + options.length + 1,
+		maxHeight:
+			paneOptions.maxHeight === undefined
+				? undefined
+				: paneOptions.maxHeight - options.length - 1,
+	}).forEach(add);
 }
 
 function renderPreviewOptionList(

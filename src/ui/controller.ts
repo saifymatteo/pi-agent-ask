@@ -7,6 +7,8 @@ import {
 	type EditorTheme,
 	type KeyId,
 	matchesKey,
+	type TuiMouseEvent,
+	type TuiMouseEventResult,
 } from "@earendil-works/pi-tui";
 import { withAskSurface } from "../ask-surface.ts";
 import { invalidPayloadResponse } from "../ask-tool-helpers.ts";
@@ -65,6 +67,13 @@ import {
 import type { AskInputCommand } from "./input.ts";
 import { getInputCommand } from "./input.ts";
 import { showPersistentAsk } from "./persistent-ask.ts";
+import {
+	getPreviewPage,
+	getPreviewPageAction,
+	movePreviewPage,
+	type PreviewBounds,
+	type PreviewPage,
+} from "./preview-pagination.ts";
 import { renderAskScreen } from "./render.ts";
 import {
 	getReviewShortcutHint,
@@ -118,6 +127,9 @@ interface AskFlowController {
 	keybindings: Keybindings;
 	pendingQuestionTypeChangeQuestionId?: string;
 	pendingReviewShortcutActionIndex?: number;
+	previewBounds?: PreviewBounds;
+	previewKey?: string;
+	previewPage?: PreviewPage;
 	remoteFlow?: RemoteAskFlowHandle;
 	settingsOpen: boolean;
 	state: AskState;
@@ -247,6 +259,12 @@ function createAskFlowController(
 	});
 
 	return {
+		get capturesViewportInput() {
+			return (
+				!controller.settingsOpen &&
+				getCurrentQuestion(controller.state)?.type === "preview"
+			);
+		},
 		get focused() {
 			return controller.editor.focused;
 		},
@@ -259,6 +277,9 @@ function createAskFlowController(
 		},
 		handleInput(data: string) {
 			handleControllerInput(controller, data);
+		},
+		handleMouse(event: TuiMouseEvent) {
+			return handleControllerMouse(controller, event);
 		},
 		dispose() {
 			controller.disposed = true;
@@ -274,9 +295,20 @@ function renderController(
 	controller: AskFlowController,
 	width: number
 ): string[] {
+	syncPreviewSelection(controller);
+	controller.previewBounds = undefined;
 	return renderAskScreen({
 		config: controller.config,
 		editor: controller.editor,
+		// Leave space for Pi's own footer/status outside the custom component.
+		height: Math.max(1, (controller.tui.terminal?.rows ?? 40) - 6),
+		preview: {
+			offset: controller.previewPage?.offset ?? 0,
+			onLayout: (page, bounds) => {
+				controller.previewPage = page;
+				controller.previewBounds = bounds;
+			},
+		},
 		footerNotice: getFooterNotice(controller),
 		reviewShortcutHint: getActiveReviewShortcutHint(controller),
 		state: controller.state,
@@ -316,7 +348,78 @@ function handleControllerInput(controller: AskFlowController, data: string) {
 		handleEditingCommand(controller, command, data);
 		return;
 	}
+	if (command.kind === "ignore" && handlePreviewInput(controller, data)) {
+		return;
+	}
 	handleNavigationCommand(controller, command);
+}
+
+function syncPreviewSelection(controller: AskFlowController) {
+	const key =
+		getCurrentQuestion(controller.state)?.type === "preview" &&
+		!getCurrentOption(controller.state)?.isCustomOption
+			? `${controller.state.activeTabIndex}:${controller.state.activeOptionIndex}`
+			: undefined;
+	if (key !== controller.previewKey) {
+		controller.previewKey = key;
+		controller.previewPage = undefined;
+		controller.previewBounds = undefined;
+	}
+}
+
+function handlePreviewInput(
+	controller: AskFlowController,
+	data: string
+): boolean {
+	syncPreviewSelection(controller);
+	const action = getPreviewPageAction(data);
+	if (!(controller.previewKey && controller.previewPage && action)) {
+		return false;
+	}
+	clearQuestionTypeChangePending(controller);
+	controller.previewPage = movePreviewPage(controller.previewPage, action);
+	refresh(controller);
+	return true;
+}
+
+function handleControllerMouse(
+	controller: AskFlowController,
+	event: TuiMouseEvent
+): TuiMouseEventResult | undefined {
+	if (
+		event.type !== "wheel" ||
+		controller.settingsOpen ||
+		controller.disposed ||
+		controller.state.completed
+	) {
+		return;
+	}
+	syncPreviewSelection(controller);
+	const { previewBounds: bounds, previewPage: page } = controller;
+	if (
+		!(bounds && page) ||
+		event.x < bounds.x ||
+		event.x >= bounds.x + bounds.width ||
+		event.y < bounds.y ||
+		event.y >= bounds.y + bounds.height
+	) {
+		return;
+	}
+	// Pi already applies its wheel speed and acceleration settings.
+	const delta = Math.trunc(event.wheelDelta ?? 0);
+	if (!Number.isFinite(delta) || delta === 0) {
+		return;
+	}
+	const next = getPreviewPage(page.total, page.pageSize, page.offset + delta);
+	const changed = next.offset !== page.offset;
+	if (changed) {
+		clearQuestionTypeChangePending(controller);
+		controller.previewPage = next;
+		refresh(controller);
+	}
+	// Keep wheel events inside the pane even at either end; never scroll-chain
+	// into the transcript or change keyboard focus while the pointer is here.
+	return { handled: true, render: changed };
 }
 
 function isPasteTarget(
@@ -712,6 +815,7 @@ function showSettingsModal(controller: AskFlowController) {
 }
 
 function refresh(controller: AskFlowController) {
+	syncPreviewSelection(controller);
 	controller.tui.requestRender();
 }
 
