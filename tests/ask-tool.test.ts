@@ -305,31 +305,39 @@ test("ask tool does not open custom UI outside TUI mode", async () => {
 
 test("emits Herdr blocked lifecycle around an interactive ask", async () => {
 	const { events, tool } = registerMockTool();
+	let customOptions: unknown;
 	const result = await tool.execute("call-1", sampleParams(), undefined, noop, {
 		[HAS_UI]: true,
 		mode: "tui",
 		ui: {
-			custom: async () => ({
-				answers: {
-					goal: { values: ["speed"], labels: ["Speed"], indices: [1] },
-				},
-				cancelled: false,
-				mode: "submit",
-				questions: [
-					{
-						id: "goal",
-						label: "Goal",
-						prompt: "What should I optimize for?",
-						type: "single",
+			custom: (_factory: unknown, options: unknown) => {
+				customOptions = options;
+				return Promise.resolve({
+					answers: {
+						goal: { values: ["speed"], labels: ["Speed"], indices: [1] },
 					},
-				],
-				title: "Clarify next step",
-			}),
+					cancelled: false,
+					mode: "submit",
+					questions: [
+						{
+							id: "goal",
+							label: "Goal",
+							prompt: "What should I optimize for?",
+							type: "single",
+						},
+					],
+					title: "Clarify next step",
+				});
+			},
 			setWorkingVisible: noop,
 		},
 	});
 
 	assert.equal(result.details.cancelled, false);
+	assert.deepEqual((customOptions as { blocked?: unknown })?.blocked, {
+		kind: "question",
+		message: "Waiting for user response",
+	});
 	assert.deepEqual(
 		events.filter(({ channel }) => channel === "herdr:blocked"),
 		[

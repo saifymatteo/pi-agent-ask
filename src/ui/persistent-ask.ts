@@ -56,6 +56,10 @@ export async function showPersistentAsk(
 			}
 		},
 	};
+	const customOptions = {
+		overlay: false,
+		blocked: { kind: "question", message: "Waiting for user response" },
+	};
 	try {
 		while (!result) {
 			const completed = await ctx.ui.custom<AskResult | undefined>(
@@ -84,7 +88,8 @@ export async function showPersistentAsk(
 						}));
 					}
 					return surface;
-				}
+				},
+				customOptions
 			);
 			if (completed) {
 				result = completed;

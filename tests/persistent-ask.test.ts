@@ -17,6 +17,7 @@ function harness() {
 	const tui = { children: [editor] as unknown[] };
 	const widgets = new Map<string, { render: () => string[] }>();
 	let mounts = 0;
+	const customOptions: unknown[] = [];
 	const ctx = {
 		ui: {
 			setWidget(key: string, factory: any) {
@@ -26,7 +27,8 @@ function harness() {
 					widgets.delete(key);
 				}
 			},
-			custom(factory: any) {
+			custom(factory: any, options: unknown) {
+				customOptions.push(options);
 				return new Promise((resolve) => {
 					let closed = false;
 					let component: any;
@@ -48,6 +50,7 @@ function harness() {
 	};
 	return {
 		ctx,
+		customOptions,
 		tui,
 		widgets,
 		get mounts() {
@@ -102,6 +105,15 @@ test("a background form remount keeps the controller, draft, and completion call
 	h.replaceWithEditor();
 	await tick();
 	assert.equal(h.mounts, 2);
+	assert.deepEqual(
+		h.customOptions.map(
+			(options) => (options as { blocked?: unknown })?.blocked
+		),
+		[
+			{ kind: "question", message: "Waiting for user response" },
+			{ kind: "question", message: "Waiting for user response" },
+		]
+	);
 	assert.equal(created, 1);
 	assert.equal(disposed, 0);
 	assert.equal(h.tui.children[0], surface);

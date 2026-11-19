@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1
+
+- Report foreground and background question forms as blocked in Herdr GUI through native Pi program status, including background remounts.
+- Preserve the existing blocked lifecycle events for Herdr TUI compatibility.
+
 ## 1.2.0
 
 - Keep long inline and file-backed proposals readable in a bounded, styled preview pane, with the options and footer outside the paged content.

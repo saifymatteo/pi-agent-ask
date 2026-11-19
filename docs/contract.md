@@ -381,7 +381,14 @@ When enabled, pi-agent-ask emits one best-effort external notification per ask s
 
 ## Herdr blocked lifecycle
 
-For interactive TUI ask flows, the extension optionally emits on `pi.events`:
+Foreground and persistent/background forms pass native `ctx.ui.custom()` blocked
+metadata `{ kind: "question", message: "Waiting for user response" }` on every
+mount. Hosts supporting this option (including Pi-Bolt) report the open form as
+blocked through native program status, which Herdr GUI/core consumes. The host
+clears that status when the custom UI closes, including on cancellation or errors.
+Hosts without native blocked-option support retain the existing UI behavior.
+
+For legacy Herdr TUI compatibility, the extension also optionally emits on `pi.events`:
 
 - `herdr:blocked` with `{ active: true, label: "Waiting for user response" }`
   immediately before waiting for input;

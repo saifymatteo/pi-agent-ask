@@ -174,9 +174,13 @@ export async function runAskFlow(
 					ctx,
 					flowOptions,
 				});
+			const customOptions = {
+				overlay: false,
+				blocked: { kind: "question", message: "Waiting for user response" },
+			};
 			return options.keepVisible
 				? await showPersistentAsk(ctx, factory)
-				: await ctx.ui.custom<AskResult>(factory);
+				: await ctx.ui.custom<AskResult>(factory, customOptions);
 		} finally {
 			emitHerdrBlocked(options.herdrEvents, false);
 		}
